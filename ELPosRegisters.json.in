@@ -1,0 +1,11 @@
+{
+    \"Name\" : \"ELPosRegisters\",
+    \"Version\" : \"0.0.1\",
+    \"CompatVersion\" : \"0.0.1\",
+    \"Vendor\" : \"tangran\",
+    \"Copyright\" : \"\",
+    \"License\" : \"\",
+    \"Description\" : \"Emasc like position registers\",
+    \"Url\" : \"\",
+    $$dependencyList
+}
