@@ -4,13 +4,15 @@ DEFINES += ELPOSREGISTERS_LIBRARY
 
 SOURCES += elposregistersplugin.cpp \
     positionregister.cpp \
-    registermanager.cpp
+    registermanager.cpp \
+    keycapturedialog.cpp
 
 HEADERS += elposregistersplugin.h \
         elposregisters_global.h \
         elposregistersconstants.h \
     registermanager.h \
-    positionregister.h
+    positionregister.h \
+    keycapturedialog.hpp
 
 # Qt Creator linking
 

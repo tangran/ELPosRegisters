@@ -27,23 +27,7 @@ public:
 
 	bool initialize(const QStringList &arguments, QString *errorString);
 	void extensionsInitialized();
-	ShutdownFlag aboutToShutdown();
-
-    bool eventFilter(QObject *watched, QEvent *event) override;
-
-private:
-    enum RegisterAction
-    {
-        NoAction,
-        BindAction,
-        JumpAction
-    };
-
-private:
-    void startAction(RegisterAction action);
-    void stopAction();
-
-    void resetCurrentEditor();
+    ShutdownFlag aboutToShutdown();
 
 private slots:
     void changeEditor(Core::IEditor *editor);
@@ -52,13 +36,10 @@ private slots:
     void triggerBindRegister();
     void triggerJump();
 
-    void abortAction();
-
 private:
     RegisterManager m_registerManager;
 
     Core::IEditor * m_currentEditor;
-    RegisterAction m_activeAction;
 };
 
 } // namespace Internal

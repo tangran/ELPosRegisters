@@ -18,12 +18,13 @@
 
 #include <QtPlugin>
 
+#include "keycapturedialog.hpp"
+
 using namespace ELPosRegisters::Internal;
 
 ELPosRegistersPlugin::ELPosRegistersPlugin()
     : m_registerManager()
     , m_currentEditor(nullptr)
-    , m_activeAction(NoAction)
 {
 }
 
@@ -74,112 +75,43 @@ ExtensionSystem::IPlugin::ShutdownFlag ELPosRegistersPlugin::aboutToShutdown()
     return SynchronousShutdown;
 }
 
-bool ELPosRegistersPlugin::eventFilter(QObject *watched, QEvent *event)
-{
-    Q_ASSERT(m_currentEditor);
-    Q_ASSERT(watched == m_currentEditor->widget());
-
-    if (event->type() == QEvent::KeyPress) {
-        const QKeyEvent * const keyEvent = static_cast<QKeyEvent *>(event);
-        const int key(keyEvent->key());
-        const int modifiers(keyEvent->modifiers());
-
-        if (modifiers == Qt::CTRL && key == Qt::Key_G)
-        {
-            stopAction();
-            return true;
-        }
-
-        const bool keyIsLatter(Qt::Key_A <= key && key <= Qt::Key_Z);
-        const bool keyIsNumber(Qt::Key_0 <= key && key <= Qt::Key_9);
-
-        if (keyEvent->modifiers() == Qt::NoModifier && (keyIsLatter || keyIsNumber)) {
-            stopAction();
-
-            if (m_activeAction == BindAction)
-                m_registerManager.fillRegister(key, *m_currentEditor);
-            else if (m_activeAction == JumpAction)
-                m_registerManager.jumpToRegister(key);
-            else
-                Q_ASSERT_X(false, "ELPosRegistersPlugin", "Unknown action");
-
-            return true;
-        }
-
-        return true;
-    }
-
-    return false;
-}
-
-void ELPosRegistersPlugin::startAction(ELPosRegistersPlugin::RegisterAction action)
-{
-    Q_ASSERT(m_activeAction == NoAction);
-    Q_ASSERT(action == BindAction || action == JumpAction);
-
-    if (m_currentEditor && m_currentEditor->widget()) {
-        m_currentEditor->widget()->installEventFilter(this);
-        m_activeAction = action;
-
-        QString help;
-        if (m_activeAction == BindAction) {
-            help = tr("ELPosRegister bind mode. Press any letter or number without modifier "
-                      "to save current cursor position into corresponding register. "
-                      "Or press ctrl+g to abort.");
-        } else if (m_activeAction == JumpAction) {
-            help = tr("ELPosRegister jump mode. Press any letter or number without modifier "
-                      "to place cursor in position saved in corresponding register. "
-                      "Or press ctrl+g to abort.");
-        } else {
-            Q_ASSERT_X(false, "ELPosRegistersPlugin", "Unknown action");
-        }
-
-        Core::EditorManager::showEditorStatusBar(
-                    QLatin1String(Constants::M_STATUS_BUFFER),
-                    help,
-                    tr("Cancel"), this, SLOT(abortAction()));
-    }
-}
-
-void ELPosRegistersPlugin::stopAction()
-{
-    if (m_currentEditor && m_currentEditor->widget())
-        m_currentEditor->widget()->removeEventFilter(this);
-
-    m_activeAction = NoAction;
-    Core::EditorManager::hideEditorStatusBar(QLatin1String(Constants::M_STATUS_BUFFER));
-}
-
-
-void ELPosRegistersPlugin::resetCurrentEditor()
-{
-    stopAction();
-    m_currentEditor = nullptr;
-}
-
 void ELPosRegistersPlugin::changeEditor(Core::IEditor *editor)
 {
-    stopAction();
     m_currentEditor = editor;
 }
 
 void ELPosRegistersPlugin::editorAboutToClose(Core::IEditor *editor)
 {
     if (m_currentEditor == editor)
-        resetCurrentEditor();
+        m_currentEditor = nullptr;
 }
 
 void ELPosRegistersPlugin::triggerBindRegister()
 {
-    startAction(BindAction);
+    if (m_currentEditor) {
+        KeyCaptureDialog dialog(tr("Press any letter or number without modifier "
+                                   "to save current cursor position into corresponding register."),
+                                Core::ICore::mainWindow());
+        const int result = dialog.exec();
+        if (result == QDialog::Accepted)
+        {
+            const int key = dialog.getCapturedKey();
+            m_registerManager.fillRegister(key, *m_currentEditor);
+        }
+    }
 }
 
 void ELPosRegistersPlugin::triggerJump()
 {
-    startAction(JumpAction);
-}
-
-void ELPosRegistersPlugin::abortAction()
-{
-    stopAction();
+    if (m_currentEditor) {
+        KeyCaptureDialog dialog(tr("Press any letter or number without modifier "
+                                   "to place cursor in position saved in corresponding register."),
+                                Core::ICore::mainWindow());
+        const int result = dialog.exec();
+        if (result == QDialog::Accepted)
+        {
+            const int key = dialog.getCapturedKey();
+            m_registerManager.jumpToRegister(key);
+        }
+    }
 }
