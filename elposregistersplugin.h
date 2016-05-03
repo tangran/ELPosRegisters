@@ -5,8 +5,6 @@
 
 #include <extensionsystem/iplugin.h>
 
-#include "registermanager.h"
-
 namespace Core {
 
 class IEditor;
@@ -15,6 +13,8 @@ class IEditor;
 
 namespace ELPosRegisters {
 namespace Internal {
+
+class RegisterManager;
 
 class ELPosRegistersPlugin : public ExtensionSystem::IPlugin
 {
@@ -37,7 +37,7 @@ private slots:
     void triggerJump();
 
 private:
-    RegisterManager m_registerManager;
+    QScopedPointer<RegisterManager> m_registerManager;
 
     Core::IEditor * m_currentEditor;
 };

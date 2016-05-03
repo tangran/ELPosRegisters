@@ -11,13 +11,13 @@ class KeyCaptureDialog : public QDialog
 public:
     KeyCaptureDialog(const QString & text, QWidget * parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
-    int getCapturedKey() const;
+    QChar getCapturedKey() const;
 
 private:
     void keyPressEvent(QKeyEvent * event) override;
 
 private:
-    int m_capturedKey;
+    QChar m_capturedKey;
 };
 
 } // namespace Internal

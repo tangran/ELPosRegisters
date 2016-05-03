@@ -18,12 +18,13 @@
 
 #include <QtPlugin>
 
+#include "registermanager.h"
 #include "keycapturedialog.hpp"
 
 using namespace ELPosRegisters::Internal;
 
 ELPosRegistersPlugin::ELPosRegistersPlugin()
-    : m_registerManager()
+    : m_registerManager(nullptr)
     , m_currentEditor(nullptr)
 {
 }
@@ -36,6 +37,8 @@ bool ELPosRegistersPlugin::initialize(const QStringList &arguments, QString *err
 {
 	Q_UNUSED(arguments)
 	Q_UNUSED(errorString)
+
+    m_registerManager.reset(new RegisterManager);
 
     QAction *bindRegister = new QAction(tr("Save position into register"), this);
     Core::Command *bindCmd = Core::ActionManager::registerAction(bindRegister, Constants::BIND_REGISTER_ACTION_ID,
@@ -61,7 +64,7 @@ bool ELPosRegistersPlugin::initialize(const QStringList &arguments, QString *err
     connect(editorManager, &Core::EditorManager::editorAboutToClose,
             this, &ELPosRegistersPlugin::editorAboutToClose);
     connect(editorManager, &Core::EditorManager::editorAboutToClose,
-            &m_registerManager, &RegisterManager::editorAboutToClose);
+            m_registerManager.data(), &RegisterManager::editorAboutToClose);
 
 	return true;
 }
@@ -95,23 +98,21 @@ void ELPosRegistersPlugin::triggerBindRegister()
         const int result = dialog.exec();
         if (result == QDialog::Accepted)
         {
-            const int key = dialog.getCapturedKey();
-            m_registerManager.fillRegister(key, *m_currentEditor);
+            const QChar key = dialog.getCapturedKey();
+            m_registerManager->fillRegister(key, *m_currentEditor);
         }
     }
 }
 
 void ELPosRegistersPlugin::triggerJump()
 {
-    if (m_currentEditor) {
-        KeyCaptureDialog dialog(tr("Press any letter or number without modifier "
-                                   "to place cursor in position saved in corresponding register."),
-                                Core::ICore::mainWindow());
-        const int result = dialog.exec();
-        if (result == QDialog::Accepted)
-        {
-            const int key = dialog.getCapturedKey();
-            m_registerManager.jumpToRegister(key);
-        }
+    KeyCaptureDialog dialog(tr("Press any letter or number without modifier "
+                               "to place cursor in position saved in corresponding register."),
+                            Core::ICore::mainWindow());
+    const int result = dialog.exec();
+    if (result == QDialog::Accepted)
+    {
+        const QChar key = dialog.getCapturedKey();
+        m_registerManager->jumpToRegister(key);
     }
 }

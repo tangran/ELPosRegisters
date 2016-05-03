@@ -2,7 +2,10 @@
 
 #include <coreplugin/idocument.h>
 #include <coreplugin/editormanager/ieditor.h>
+#include <projectexplorer/session.h>
 #include <utils/fileutils.h>
+
+#include "positionregister.h"
 
 namespace ELPosRegisters {
 namespace Internal {
@@ -10,6 +13,8 @@ namespace Internal {
 RegisterManager::RegisterManager()
     : m_registers()
 {
+    connect(ProjectExplorer::SessionManager::instance(), &ProjectExplorer::SessionManager::sessionLoaded,
+            this, &RegisterManager::onSessionLoaded);
 }
 
 RegisterManager::~RegisterManager() = default;
@@ -24,6 +29,7 @@ void RegisterManager::fillRegister(const QChar &key, Core::IEditor &editor)
 
     PositionRegister reg(editor, filePath, line, column);
     m_registers.insert(key, reg);
+    saveRegisters();
 }
 
 void RegisterManager::jumpToRegister(const QChar &key)
@@ -38,6 +44,36 @@ void RegisterManager::editorAboutToClose(Core::IEditor *editor)
         if (reg.getEditor() == editor)
             reg.forgetEditor();
     }
+}
+
+void RegisterManager::onSessionLoaded(QString sessionName)
+{
+    Q_UNUSED(sessionName);
+
+    loadRegisters();
+}
+
+void RegisterManager::loadRegisters()
+{
+    m_registers.clear();
+
+    const QStringList list = ProjectExplorer::SessionManager::value(QLatin1String("ELPosRegisters")).toStringList();
+    foreach (const QString & i, list) {
+        const QChar key = i.at(0);
+        const PositionRegister reg = PositionRegister::deserialize(i.mid(1));
+        m_registers.insert(key, reg);
+    }
+}
+
+void RegisterManager::saveRegisters()
+{
+    QStringList list;
+
+    const auto end = m_registers.cend();
+    for (auto iter = m_registers.cbegin(); iter != end; ++iter)
+        list << iter.key() + iter.value().serialize();
+
+    ProjectExplorer::SessionManager::setValue(QLatin1String("ELPosRegisters"), list);
 }
 
 } // namespace Internal

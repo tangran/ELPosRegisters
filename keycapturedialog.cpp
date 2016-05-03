@@ -12,7 +12,7 @@ using namespace ELPosRegisters::Internal;
 
 KeyCaptureDialog::KeyCaptureDialog(const QString & text, QWidget * parent, Qt::WindowFlags f)
     : QDialog(parent, f)
-    , m_capturedKey(-1)
+    , m_capturedKey()
 {
     QLabel * const label = new QLabel(tr("%1\n\nPress ECS to cancel.").arg(text), this);
     label->setWordWrap(true);
@@ -25,7 +25,7 @@ KeyCaptureDialog::KeyCaptureDialog(const QString & text, QWidget * parent, Qt::W
     setWindowTitle(tr("Key capture"));
 }
 
-int KeyCaptureDialog::getCapturedKey() const
+QChar KeyCaptureDialog::getCapturedKey() const
 {
     return m_capturedKey;
 }

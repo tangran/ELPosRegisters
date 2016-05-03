@@ -35,6 +35,13 @@ public:
 public Q_SLOTS:
     void editorAboutToClose(Core::IEditor *editor);
 
+private Q_SLOTS:
+    void onSessionLoaded(QString sessionName);
+
+private:
+    void loadRegisters();
+    void saveRegisters();
+
 private:
     QHash<QChar, PositionRegister> m_registers;
 };

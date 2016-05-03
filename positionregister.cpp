@@ -12,8 +12,8 @@ PositionRegister PositionRegister::deserialize(const QString &serializedRegister
 {
     const QLatin1Char colon(':');
     const int firstColon(serializedRegister.indexOf(colon));
-    const int secondColon(serializedRegister.indexOf(colon));
-    const int thirdColon(serializedRegister.indexOf(colon));
+    const int secondColon(serializedRegister.indexOf(colon, firstColon + 1));
+    const int thirdColon(serializedRegister.indexOf(colon, secondColon + 1));
 
     if (firstColon == 0 && secondColon != -1 && thirdColon != -1) {
         const QString filePath = serializedRegister.mid(firstColon + 1, secondColon - firstColon - 1);
